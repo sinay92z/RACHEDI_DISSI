@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
-import { MailerService } from 'src/mailer.service';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
@@ -14,7 +13,6 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly mailerService: MailerService,
   ) {}
 
   async login({ authBody }: { authBody: LoginUserDto }) {
@@ -70,11 +68,6 @@ export class AuthService {
       },
     });
 
-    await this.mailerService.sendCreatedAccountEmail({
-      firstName: name,
-      recipient: email,
-    });
-
     return this.authenticateUser({ userId: createdUser.id });
   }
 
@@ -122,12 +115,6 @@ export class AuthService {
         isResettingPassword: true,
         resetPasswordToken: createdId,
       },
-    });
-
-    await this.mailerService.sendRequestedPasswordEmail({
-      firstName: existingUser.name,
-      recipient: existingUser.email,
-      token: createdId,
     });
 
     return {
